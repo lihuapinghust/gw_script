@@ -1,115 +1,222 @@
-
+global_timeout = 5000
+max_times = 10000
 count = 0
-while (count < 50) {
+while (count < max_times) {
     count = count + 1
     launch("com.lovepi.setting")
 
     var pkg = "com.cgws.wealth"
-    var url = "http://127.0.0.1:1688/cmd?fun=newRecord&targets=" + pkg
-    var res = http.get(url)
-    if (res.statusCode != 200) {
-        toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
-        exit();
-    }
-
+    newRecord(pkg)
     launch(pkg);
 
-    sleep(2000);
-    click(540, 1750);
+    // sleep(2000);
+    var agree_btn = id("dlg_app_privacy_btn_agree").findOne(global_timeout)
+    if (agree_btn != null) {
+        agree_btn.click()
+    } else {
+        click(540, 1500)
+    }
 
-    sleep(5000);
-    click(950, 160);
+    // sleep(1000);
+    var skip = id("cgws_splash_kh_skip").findOne(global_timeout)
+    if (skip != null) {
+        skip.click()
+    } else {
+        click(950, 150)
+    }
 
-    sleep(10000);
-    back();
+    // sleep(1000);
+    var dlgCloseBtn = id("dlg_img_close").findOne(global_timeout)
+    if (dlgCloseBtn != null) {
+        dlgCloseBtn.click()
+    }
 
-    sleep(10000);
-    click(540, 1070);
+    // sleep(1000);
+    dlgCloseBtn = id("dlg_announcement_img_close").findOne(global_timeout)
+    if (dlgCloseBtn != null) {
+        dlgCloseBtn.click()
+    }
 
-    sleep(2000);
-    click(540, 400);
+    // sleep(1000);
+    var login = id("btn_login").findOne(global_timeout)
+    if (login != null) {
+        login.click()
+    } else {
+        var sigin = id("cgws_main_home_fg_iv_sign_in").findOne(global_timeout)
+        if (sigin != null) {
+            sigin.click()
+        }
+    }
+
+    // sleep(1000);
+    var phone = id("trade_verify_edit_phone").findOne(global_timeout)
+    if (phone != null) {
+        phone.click()
+    } else {
+        click(380, 350)
+    }
 
     var token = "BzU+4v8uZgIX5A6ZuFSvw+0gtKdiwTPdDK9CVgDJBk4oxcTglYChLarMcs5//9mB5EqUUsYx4aJ2x5On0EBSnQGfN8/ERFkwowfA6R1l+l8DcYUNOqRjva4OjPW4wRq5yBmgIBd7xyTaHcLbN3Ui+4Y4GJEN+meU5Z9sd8HqC00="
     var project_id = "14161"
+    var mobile = getPhoneNum(project_id, token)
+
+    // sleep(1000);
+    setText(0, mobile)
+
+    // sleep(2000);
+    if (!requestScreenCapture()) {
+        toastLog("请求截图失败");
+        continue
+    }
+
+    // sleep(1000);
+    left = 720
+    top = 501
+    right = 990
+    bottom = 609
+
+    captcha_try_count = 0
+    while (captcha_try_count < 5) {
+        captcha_try_count = captcha_try_count + 1
+
+        captureScreen("/storage/emulated/0/Pictures/gw.png");
+        var clip = images.clip(images.read("/storage/emulated/0/Pictures/gw.png"), left, top, right - left, bottom - top);
+        let res = http.post("http://api.jfbym.com/api/YmServer/customApi", {
+            'image': images.toBase64(clip),
+            'token': 'taYgkWOQpc0l4gG8YxoarFIRZEzpKgk0kdLufEJsbJY',
+            'type': '10103',
+        });
+        images.save(clip, "/sdcard/Pictures/gw_clip.png");
+        if (res.statusCode != 200) {
+            toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
+            continue
+        }
+
+        jsonResp = res.body.json();
+        captcha = jsonResp['data']['data']
+        toastLog("captcha: " + captcha)
+        
+        // input captcha
+        var captcha_input = id("trade_verify_et_verify_code").findOne(global_timeout)
+        if (captcha_input != null) {
+            captcha_input.click()
+        } else {
+            click(420, 550)
+        }
+        // sleep(1000);
+        setText(1, captcha)
+        // sleep(1000);
+        var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(global_timeout)
+        if (get_sms_code != null) {
+            get_sms_code.click()
+        } else {
+            click(870, 730)
+        }
+
+        // sleep(3000);
+        var positiveBtn = id("common_dlg_positive_btn").findOne(global_timeout)
+        if (positiveBtn != null) {
+            positiveBtn.click()
+        } else {
+            click(800, 1250)
+        }
+        
+        // sleep(3000);
+        var captcha_err_label = id("trade_security_verify_text_error").findOne(global_timeout)
+        if (captcha_err_label != null) {
+            toastLog("captcha error, try again")
+            continue
+        }
+        break
+    }
+
+    var code = getSmsCode(mobile, project_id, token)
+    if (code != null) {
+        var code_input = id("trade_verify_edit_code").findOne(global_timeout)
+        if (code_input != null) {
+            code_input.click()
+        } else {
+            click(400, 730)
+        }
+        // sleep(1000);
+        setText(2, code)
+
+        // sleep(3000);
+        click(device.width / 2, device.height / 2 - 100)
+
+        // sleep(3000)
+
+        uploadPhoneNum(mobile)
+    } else {
+        toastLog("code is null")
+    }
+}
+
+// 定义 uploadPhoneNum 函数
+function uploadPhoneNum(phoneNum) {
+    var url = "https://aadmin.focuslife.today/api/email-usages";
+    var data = {
+        email: phoneNum
+    };
+    
+    var res = http.postJson(url, data);
+    var jsonResp = res.body.json();
+    toastLog(JSON.stringify(jsonResp));
+}
+
+// 示例调用
+uploadPhoneNum("1234567890");
+
+
+function newRecord(pkg) {
+    var url = "http://127.0.0.1:1688/cmd?fun=newRecord&fake_android_id=1&fake_cache_key=1&update_sdcard_ts=1&random_drm_device_id=1&random_gsf_id=1&random_ipv6=1&targets=" + pkg
+    var res = http.get(url)
+    if (res.statusCode == 200) {
+        var jsonResp = res.body.json();
+        toastLog(JSON.stringify(jsonResp))
+    } else {
+        toastLog("请求失败: " + res.statusCode + " " + res.body.string());
+    }
+}
+
+function getPhoneNum(project_id, token) {
     var url = "http://api.sqhyw.net:90/api/get_mobile?project_id=" + project_id + "&token=" + token
     var res = http.get(url);
-    if (res.statusCode != 200) {
-        toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
-        exit();
-    }
-
-    var jsonResp = res.body.json();
-    var mobile = jsonResp['mobile']
-    toastLog("phone_num: " + mobile)
-
-    http.get("http://127.0.0.1:1688/cmd?fun=execAsRoot&command=input text " + mobile);
-    // setText(mobile);
-
-    sleep(2000);
-    if (!requestScreenCapture()) {
-
-        console.show()
-
-        toastLog("请求截图失败");
-
-        exit();
-
+    if (res.statusCode == 200) {
+        var jsonResp = res.body.json();
+        toastLog(JSON.stringify(jsonResp))
+        var mobile = jsonResp['mobile']
+        toastLog("phone_num: " + mobile)
+        return mobile
     } else {
-        toastLog("请求截图成功");
+        toastLog("请求失败: " + res.statusCode + " " + res.body.string());
     }
+    return null
+}
 
-    captureScreen("/storage/emulated/0/Pictures/gw.png");
-    var clip = images.clip(images.read("/storage/emulated/0/Pictures/gw.png"), 720, 568, 990 - 720, 676 - 568);
-
-    let res = http.post("http://api.jfbym.com/api/YmServer/customApi", {
-        'image': images.toBase64(clip),
-        'token': 'taYgkWOQpc0l4gG8YxoarFIRZEzpKgk0kdLufEJsbJY',
-        'type': '10103',
-    });
-
-    images.save(clip, "/sdcard/Pictures/gw_clip.png");
-
-    if (res.statusCode != 200) {
-        toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
-        exit();
+function getSmsCode(mobile, project_id, token) {
+    sms_try_count = 0
+    while (sms_try_count < 40) {
+        sms_try_count = sms_try_count + 1
+        sleep(3000)
+        
+        var url = "http://api.sqhyw.net:90/api/get_message?phone_num=" + mobile + "&project_id=" + project_id + "&token=" + token
+        var res = http.get(url);
+        if (res.statusCode == 200) {
+            var jsonResp = res.body.json();
+            toastLog(JSON.stringify(jsonResp))
+            var message = jsonResp['message']
+            if (message == "短信还未到达,请继续获取") {
+                continue
+            }
+            var code = jsonResp['code']
+            toastLog("code: " + code)
+            return code
+        } else {
+            toastLog("请求失败: " + res.statusCode + " " + res.body.string());
+        }
     }
-
-    jsonResp = res.body.json();
-
-    captcha = jsonResp['data']['data']
-    toastLog("captcha: " + captcha)
-
-    click(540, 620);
-    input(2, captcha);
-    sleep(2000);
-    http.get("http://127.0.0.1:1688/cmd?fun=execAsRoot&command=input text " + captcha);
-
-    sleep(2000);
-    click(870, 820);
-
-    sleep(2000);
-    click(750, 1390);
-
-    sleep(15000);
-
-    url = "http://api.sqhyw.net:90/api/get_message?phone_num=" + mobile + "&project_id=" + project_id + "&token=" + token
-    res = http.get(url);
-    if (res.statusCode != 200) {
-        toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
-        exit();
-    }
-
-    var body = res.body.string()
-    toastLog(body)
-    code = body.substring(24, 30)
-    toastLog("code: " + code)
-    click(540, 820);
-    http.get("http://127.0.0.1:1688/cmd?fun=execAsRoot&command=input text " + code);
-
-    sleep(2000);
-    click(540, 1080);
-
-    sleep(10000)
+    return null
 }
 
 function base64Decode(str) {
