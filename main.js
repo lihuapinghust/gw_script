@@ -1,154 +1,170 @@
+var lockFile = "/sdcard/main.lock";
+
 global_timeout = 5000
 max_times = 10000
 count = 0
 while (count < max_times) {
     count = count + 1
-    launch("com.lovepi.setting")
-
-    var pkg = "com.cgws.wealth"
-    newRecord(pkg)
-    launch(pkg);
-
-    // sleep(2000);
-    var agree_btn = id("dlg_app_privacy_btn_agree").findOne(global_timeout)
-    if (agree_btn != null) {
-        agree_btn.click()
-    } else {
-        click(540, 1500)
-    }
-
-    // sleep(1000);
-    var skip = id("cgws_splash_kh_skip").findOne(global_timeout)
-    if (skip != null) {
-        skip.click()
-    } else {
-        click(950, 150)
-    }
-
-    // sleep(1000);
-    var dlgCloseBtn = id("dlg_img_close").findOne(global_timeout)
-    if (dlgCloseBtn != null) {
-        dlgCloseBtn.click()
-    }
-
-    // sleep(1000);
-    dlgCloseBtn = id("dlg_announcement_img_close").findOne(global_timeout)
-    if (dlgCloseBtn != null) {
-        dlgCloseBtn.click()
-    }
-
-    // sleep(1000);
-    var login = id("btn_login").findOne(global_timeout)
-    if (login != null) {
-        login.click()
-    } else {
-        var sigin = id("cgws_main_home_fg_iv_sign_in").findOne(global_timeout)
-        if (sigin != null) {
-            sigin.click()
+    try {
+        if (files.exists(lockFile)) {
+            log("另一个实例正在运行。退出当前实例。");
+            exit();
+        } else {
+            files.createWithDirs(lockFile);
         }
-    }
 
-    // sleep(1000);
-    var phone = id("trade_verify_edit_phone").findOne(global_timeout)
-    if (phone != null) {
-        phone.click()
-    } else {
-        click(380, 350)
-    }
+        launch("com.lovepi.setting")
 
-    var token = "BzU+4v8uZgIX5A6ZuFSvw+0gtKdiwTPdDK9CVgDJBk4oxcTglYChLarMcs5//9mB5EqUUsYx4aJ2x5On0EBSnQGfN8/ERFkwowfA6R1l+l8DcYUNOqRjva4OjPW4wRq5yBmgIBd7xyTaHcLbN3Ui+4Y4GJEN+meU5Z9sd8HqC00="
-    var project_id = "14161"
-    var mobile = getPhoneNum(project_id, token)
+        var pkg = "com.cgws.wealth"
+        newRecord(pkg)
+        launch(pkg);
 
-    // sleep(1000);
-    setText(0, mobile)
+        // sleep(2000);
+        var agree_btn = id("dlg_app_privacy_btn_agree").findOne(global_timeout)
+        if (agree_btn != null) {
+            agree_btn.click()
+        } else {
+            click(540, 1500)
+        }
 
-    // sleep(2000);
-    if (!requestScreenCapture()) {
-        toastLog("请求截图失败");
-        continue
-    }
+        // sleep(1000);
+        var skip = id("cgws_splash_kh_skip").findOne(global_timeout)
+        if (skip != null) {
+            skip.click()
+        } else {
+            click(950, 150)
+        }
 
-    // sleep(1000);
-    left = 720
-    top = 501
-    right = 990
-    bottom = 609
+        // sleep(1000);
+        var dlgCloseBtn = id("dlg_img_close").findOne(global_timeout)
+        if (dlgCloseBtn != null) {
+            dlgCloseBtn.click()
+        }
 
-    captcha_try_count = 0
-    while (captcha_try_count < 5) {
-        captcha_try_count = captcha_try_count + 1
+        // sleep(1000);
+        dlgCloseBtn = id("dlg_announcement_img_close").findOne(global_timeout)
+        if (dlgCloseBtn != null) {
+            dlgCloseBtn.click()
+        }
 
-        captureScreen("/storage/emulated/0/Pictures/gw.png");
-        var clip = images.clip(images.read("/storage/emulated/0/Pictures/gw.png"), left, top, right - left, bottom - top);
-        let res = http.post("http://api.jfbym.com/api/YmServer/customApi", {
-            'image': images.toBase64(clip),
-            'token': 'taYgkWOQpc0l4gG8YxoarFIRZEzpKgk0kdLufEJsbJY',
-            'type': '10103',
-        });
-        images.save(clip, "/sdcard/Pictures/gw_clip.png");
-        if (res.statusCode != 200) {
-            toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
+        // sleep(1000);
+        var login = id("btn_login").findOne(global_timeout)
+        if (login != null) {
+            login.click()
+        } else {
+            var sigin = id("cgws_main_home_fg_iv_sign_in").findOne(global_timeout)
+            if (sigin != null) {
+                sigin.click()
+            }
+        }
+
+        // sleep(1000);
+        var phone = id("trade_verify_edit_phone").findOne(global_timeout)
+        if (phone != null) {
+            phone.click()
+        } else {
+            click(380, 350)
+        }
+
+        var token = "BzU+4v8uZgIX5A6ZuFSvw+0gtKdiwTPdDK9CVgDJBk4oxcTglYChLarMcs5//9mB5EqUUsYx4aJ2x5On0EBSnQGfN8/ERFkwowfA6R1l+l8DcYUNOqRjva4OjPW4wRq5yBmgIBd7xyTaHcLbN3Ui+4Y4GJEN+meU5Z9sd8HqC00="
+        var project_id = "14161"
+        var mobile = getPhoneNum(project_id, token)
+
+        // sleep(1000);
+        setText(0, mobile)
+
+        // sleep(2000);
+        if (!requestScreenCapture()) {
+            toastLog("请求截图失败");
             continue
         }
 
-        jsonResp = res.body.json();
-        captcha = jsonResp['data']['data']
-        toastLog("captcha: " + captcha)
-        
-        // input captcha
-        var captcha_input = id("trade_verify_et_verify_code").findOne(global_timeout)
-        if (captcha_input != null) {
-            captcha_input.click()
-        } else {
-            click(420, 550)
-        }
         // sleep(1000);
-        setText(1, captcha)
-        // sleep(1000);
-        var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(global_timeout)
-        if (get_sms_code != null) {
-            get_sms_code.click()
+        left = 720
+        top = 501
+        right = 990
+        bottom = 609
+
+        captcha_try_count = 0
+        while (captcha_try_count < 5) {
+            captcha_try_count = captcha_try_count + 1
+
+            captureScreen("/storage/emulated/0/Pictures/gw.png");
+            var clip = images.clip(images.read("/storage/emulated/0/Pictures/gw.png"), left, top, right - left, bottom - top);
+            let res = http.post("http://api.jfbym.com/api/YmServer/customApi", {
+                'image': images.toBase64(clip),
+                'token': 'taYgkWOQpc0l4gG8YxoarFIRZEzpKgk0kdLufEJsbJY',
+                'type': '10103',
+            });
+            images.save(clip, "/sdcard/Pictures/gw_clip.png");
+            if (res.statusCode != 200) {
+                toastLog("请求失败: " + res.statusCode + " " + res.statusMessage);
+                continue
+            }
+
+            jsonResp = res.body.json();
+            captcha = jsonResp['data']['data']
+            toastLog("captcha: " + captcha)
+            
+            // input captcha
+            var captcha_input = id("trade_verify_et_verify_code").findOne(global_timeout)
+            if (captcha_input != null) {
+                captcha_input.click()
+            } else {
+                click(420, 550)
+            }
+            // sleep(1000);
+            setText(1, captcha)
+            // sleep(1000);
+            var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(global_timeout)
+            if (get_sms_code != null) {
+                get_sms_code.click()
+            } else {
+                click(870, 730)
+            }
+
+            // sleep(3000);
+            var positiveBtn = id("common_dlg_positive_btn").findOne(global_timeout)
+            if (positiveBtn != null) {
+                positiveBtn.click()
+            } else {
+                click(800, 1250)
+            }
+            
+            // sleep(3000);
+            var captcha_err_label = id("trade_security_verify_text_error").findOne(global_timeout)
+            if (captcha_err_label != null) {
+                toastLog("captcha error, try again")
+                continue
+            }
+            break
+        }
+
+        var code = getSmsCode(mobile, project_id, token)
+        if (code != null) {
+            var code_input = id("trade_verify_edit_code").findOne(global_timeout)
+            if (code_input != null) {
+                code_input.click()
+            } else {
+                click(400, 730)
+            }
+            // sleep(1000);
+            setText(2, code)
+
+            // sleep(3000);
+            click(device.width / 2, device.height / 2 - 100)
+
+            // sleep(3000)
+            uploadPhoneNum(mobile)
         } else {
-            click(870, 730)
+            toastLog("code is null")
         }
-
-        // sleep(3000);
-        var positiveBtn = id("common_dlg_positive_btn").findOne(global_timeout)
-        if (positiveBtn != null) {
-            positiveBtn.click()
-        } else {
-            click(800, 1250)
-        }
-        
-        // sleep(3000);
-        var captcha_err_label = id("trade_security_verify_text_error").findOne(global_timeout)
-        if (captcha_err_label != null) {
-            toastLog("captcha error, try again")
-            continue
-        }
-        break
-    }
-
-    var code = getSmsCode(mobile, project_id, token)
-    if (code != null) {
-        var code_input = id("trade_verify_edit_code").findOne(global_timeout)
-        if (code_input != null) {
-            code_input.click()
-        } else {
-            click(400, 730)
-        }
-        // sleep(1000);
-        setText(2, code)
-
-        // sleep(3000);
-        click(device.width / 2, device.height / 2 - 100)
-
-        // sleep(3000)
-
-        uploadPhoneNum(mobile)
-    } else {
-        toastLog("code is null")
+        releasePhoneNum(project_id, token, mobile)
+    } catch (e) {
+        log("脚本出错：" + e);
+    } finally {
+        // 删除文件锁
+        files.remove(lockFile);
     }
 }
 
@@ -164,10 +180,6 @@ function uploadPhoneNum(phoneNum) {
     toastLog(JSON.stringify(jsonResp));
 }
 
-// 示例调用
-uploadPhoneNum("1234567890");
-
-
 function newRecord(pkg) {
     var url = "http://127.0.0.1:1688/cmd?fun=newRecord&fake_android_id=1&fake_cache_key=1&update_sdcard_ts=1&random_drm_device_id=1&random_gsf_id=1&random_ipv6=1&targets=" + pkg
     var res = http.get(url)
@@ -179,8 +191,21 @@ function newRecord(pkg) {
     }
 }
 
+function releasePhoneNum(project_id, token, phone_num) {
+    var url = "http://api.sqhyw.net:90/api/free_mobile?phone_num=" + phone_num + "&project_id=" + project_id + "&token=" + token
+    var res = http.get(url);
+    if (res.statusCode == 200) {
+        var jsonResp = res.body.json();
+        toastLog(JSON.stringify(jsonResp))
+        toastLog("released phone_num: " + phone_num)
+    } else {
+        toastLog("请求失败: " + res.statusCode + " " + res.body.string());
+    }
+    return null
+}
+
 function getPhoneNum(project_id, token) {
-    var url = "http://api.sqhyw.net:90/api/get_mobile?project_id=" + project_id + "&token=" + token
+    var url = "http://api.sqhyw.net:90/api/get_mobile?creat_time=10&project_id=" + project_id + "&token=" + token
     var res = http.get(url);
     if (res.statusCode == 200) {
         var jsonResp = res.body.json();
@@ -196,9 +221,8 @@ function getPhoneNum(project_id, token) {
 
 function getSmsCode(mobile, project_id, token) {
     sms_try_count = 0
-    while (sms_try_count < 60) {
+    while (sms_try_count < 80) {
         sms_try_count = sms_try_count + 1
-        sleep(3000)
         
         var url = "http://api.sqhyw.net:90/api/get_message?phone_num=" + mobile + "&project_id=" + project_id + "&token=" + token
         var res = http.get(url);
@@ -215,6 +239,14 @@ function getSmsCode(mobile, project_id, token) {
         } else {
             toastLog("请求失败: " + res.statusCode + " " + res.body.string());
         }
+
+        var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(3000)
+        if (get_sms_code != null) {
+            get_sms_code.click()
+        } else {
+            click(870, 730)
+        }
+        sleep(2000)
     }
     return null
 }
