@@ -113,9 +113,9 @@ while (count < max_times) {
             } else {
                 click(420, 550)
             }
-            // sleep(1000);
+            sleep(500);
             setText(1, captcha)
-            // sleep(1000);
+            sleep(500);
             var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(global_timeout)
             if (get_sms_code != null) {
                 get_sms_code.click()
@@ -123,7 +123,7 @@ while (count < max_times) {
                 click(870, 730)
             }
 
-            // sleep(3000);
+            sleep(500);
             var positiveBtn = id("common_dlg_positive_btn").findOne(global_timeout)
             if (positiveBtn != null) {
                 positiveBtn.click()
@@ -224,6 +224,14 @@ function getSmsCode(mobile, project_id, token) {
     while (sms_try_count < 80) {
         sms_try_count = sms_try_count + 1
         
+        sleep(2000)
+        var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(3000)
+        if (get_sms_code != null) {
+            get_sms_code.click()
+        } else {
+            click(870, 730)
+        }
+
         var url = "http://api.sqhyw.net:90/api/get_message?phone_num=" + mobile + "&project_id=" + project_id + "&token=" + token
         var res = http.get(url);
         if (res.statusCode == 200) {
@@ -239,14 +247,6 @@ function getSmsCode(mobile, project_id, token) {
         } else {
             toastLog("请求失败: " + res.statusCode + " " + res.body.string());
         }
-
-        var get_sms_code = id("trade_verify_txt_get_sms_code").findOne(3000)
-        if (get_sms_code != null) {
-            get_sms_code.click()
-        } else {
-            click(870, 730)
-        }
-        sleep(2000)
     }
     return null
 }
