@@ -196,7 +196,7 @@ function getPhoneNum(project_id, token) {
 
 function getSmsCode(mobile, project_id, token) {
     sms_try_count = 0
-    while (sms_try_count < 40) {
+    while (sms_try_count < 60) {
         sms_try_count = sms_try_count + 1
         sleep(3000)
         
