@@ -1,18 +1,25 @@
 var lockFile = "/sdcard/main.lock";
 
+if (files.exists(lockFile)) {
+    log("另一个实例正在运行。退出当前实例。");
+    exit();
+} else {
+    files.createWithDirs(lockFile);
+}
+
+launch("com.lovepi.setting")
+sleep(2000)
+var command = "settings put secure enabled_accessibility_services org.autojs.autoxjs.v6/com.stardust.autojs.core.accessibility.AccessibilityService"
+http.get(`http://127.0.0.1:1688/cmd?fun=execAsRoot&command=${command}`)
+command = "settings put secure enabled_accessibility_services com.script2/com.stardust.autojs.core.accessibility.AccessibilityService"
+http.get(`http://127.0.0.1:1688/cmd?fun=execAsRoot&command=${command}`)
+
 global_timeout = 5000
 max_times = 10000
 count = 0
 while (count < max_times) {
     count = count + 1
     try {
-        if (files.exists(lockFile)) {
-            log("另一个实例正在运行。退出当前实例。");
-            exit();
-        } else {
-            files.createWithDirs(lockFile);
-        }
-
         launch("com.lovepi.setting")
         
         sleep(1000)
