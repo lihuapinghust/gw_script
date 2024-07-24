@@ -14,6 +14,9 @@ while (count < max_times) {
         }
 
         launch("com.lovepi.setting")
+        
+        sleep(1000)
+        deleteRecords()
 
         var pkg = "com.cgws.wealth"
         newRecord(pkg)
@@ -69,6 +72,7 @@ while (count < max_times) {
         var token = "BzU+4v8uZgIX5A6ZuFSvw+0gtKdiwTPdDK9CVgDJBk4oxcTglYChLarMcs5//9mB5EqUUsYx4aJ2x5On0EBSnQGfN8/ERFkwowfA6R1l+l8DcYUNOqRjva4OjPW4wRq5yBmgIBd7xyTaHcLbN3Ui+4Y4GJEN+meU5Z9sd8HqC00="
         var project_id = "14161"
         var mobile = getPhoneNum(project_id, token)
+        uploadPhoneNum(mobile)
 
         // sleep(1000);
         setText(0, mobile)
@@ -154,8 +158,8 @@ while (count < max_times) {
             // sleep(3000);
             click(device.width / 2, device.height / 2 - 100)
 
-            // sleep(3000)
-            uploadPhoneNum(mobile)
+            sleep(3000)
+            updatePhoneNum(mobile, "1")
         } else {
             toastLog("code is null")
         }
@@ -168,16 +172,58 @@ while (count < max_times) {
     }
 }
 
+function updatePhoneNum(mobile, status) {
+    var url = "https://aadmin.focuslife.today/api/email-usages?email=" + mobile;
+    var data = {
+        click_id: status
+    }; 
+
+    var jsonData = JSON.stringify(data);
+
+    var res = http.request(url, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"  // 指定内容类型为 JSON
+        },
+        body: jsonData,
+        contentType: "application/json"  // 指定请求内容类型
+    });
+
+    var jsonResp = res.body.json();
+    toastLog(JSON.stringify(jsonResp));
+}
+
 // 定义 uploadPhoneNum 函数
 function uploadPhoneNum(phoneNum) {
     var url = "https://aadmin.focuslife.today/api/email-usages";
     var data = {
-        email: phoneNum
+        email: phoneNum,
+        click_id: "0"
     };
     
     var res = http.postJson(url, data);
     var jsonResp = res.body.json();
     toastLog(JSON.stringify(jsonResp));
+}
+
+function deleteRecords() {
+    var res = http.get("http://127.0.0.1:1688/cmd?fun=getAllRecordNames")
+    if (res.statusCode == 200) {
+        var jsonResp = res.body.json();
+        toastLog(JSON.stringify(jsonResp))
+        var recordNames = jsonResp['data']
+        for (var i = 0; i < recordNames.length; i++) {
+            var recordName = recordNames[i]
+            var url = "http://127.0.0.1:1688/cmd?fun=deleteRecord&record=" + recordName
+            var res = http.get(url)
+            if (res.statusCode == 200) {
+                var jsonResp = res.body.json();
+                toastLog(JSON.stringify(jsonResp))
+            } else {
+                toastLog("请求失败: " + res.statusCode + " " + res.body.string());
+            }
+        }
+    }
 }
 
 function newRecord(pkg) {
